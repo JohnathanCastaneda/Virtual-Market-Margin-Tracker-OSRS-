@@ -86,7 +86,7 @@ def home():
     
     sorted_profits = sorted(profit_list, key=lambda x: x['profit'] if x else float('-inf'), reverse=True)
     
-    return render_template('home.html', recipes=sorted_profits)
+    return render_template('index.html', recipes=sorted_profits)
     
     '''''
     profit_recipes = [profit_recipe(recipe) for recipe in RECIPES]
