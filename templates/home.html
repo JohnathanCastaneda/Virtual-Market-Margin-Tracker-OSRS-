@@ -1,0 +1,154 @@
+{% extends "layout.html" %}
+{% block content %}
+
+  <h1 class="mb-4" style="color: white;">OSRS Recipe Manager</h1>
+  <!-- New Recipe Button Placeholder -->
+  <!-- <button>New Recipe</button> -->
+   <h4 style="color: white;"><em>Creation of...</em></h4>
+  <br><br>
+  <!--
+  <input
+    class="form-control"
+    list="itemOptions"  
+    id="itemSearch"
+    placeholder="Search Item"
+    autocomplete="off"
+  > 
+
+  <div id="dropdown" class="list-group mt-1"></div>
+
+  <p id="selectedItem" class="mt-3 fw-bold"></p> -->
+
+  <script>
+const input = document.getElementById("itemSearch");
+const dropdown = document.getElementById("dropdown");
+const selected = document.getElementById("selectedItem");
+
+input.addEventListener("input", async () => {
+  const query = input.value.trim();
+  dropdown.innerHTML = "";
+
+  if (!query) return;
+
+  const response = await fetch(`/search?q=${query}`);
+  const items = await response.json();
+
+  items.forEach(item => {
+    const div = document.createElement("div");
+    div.textContent = item;
+    div.className = "list-group-item list-group-item-action";
+    div.style.cursor = "pointer";
+
+    div.onclick = async() => {
+      input.value = item;
+      dropdown.innerHTML = "";
+      selected.textContent = `Selected item: ${item}`;
+      // Fetch and display the price
+      try {
+        const priceResponse = await fetch(`/price?item=${encodeURIComponent(item)}`);
+        const data = await priceResponse.json();
+
+        if (data.error) {
+          selected.textContent = data.error;
+        } else {
+          selected.textContent += ` | High: ${data.high.toLocaleString()} | Low: ${data.low.toLocaleString()}`;
+        }
+      } catch (error) {
+        selected.textContent += " | Error fetching price data.";
+      }
+    };
+
+    dropdown.appendChild(div);
+  });
+});
+  </script>
+
+<div class="accordion" id="recipeAccordion">
+
+{% for recipe in recipes %}
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="heading{{ loop.index }}">
+      <button
+        class="accordion-button collapsed"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#collapse{{ loop.index }}"
+        style = "background-color: #3e362f;"
+      >
+        <span class="flex-grow-1" style="color: white;">{{ recipe.name }}</span>
+        <span class="fw-bold {% if recipe.profit > 0 %}text-success{% else %}text-danger{% endif %}">
+          {{ "{:,}".format(recipe.profit) }} gp
+        </span>
+      </button>
+    </h2>
+
+    <div
+      id="collapse{{ loop.index }}"
+      class="accordion-collapse collapse"
+      data-bs-parent="#recipeAccordion"
+    >
+      <div class="accordion-body">
+
+        <table class="table table-sm table-dark table-striped">
+          <thead>
+            <tr>
+              <th>Items</th>
+              <th>Qty</th>
+              <th>Unit Price</th>
+              <th>Total</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for i in recipe.inputs %}
+            <tr>
+              <td>{{ i.item }}</td>
+              <td>{{ i.qty }}</td>
+              <td>{{ "{:,}".format(i.unit_price) }} gp</td>
+              <td>{{ "{:,}".format(i.total) }} gp</td>
+              <td class="text-warning">Input</td>
+            </tr>
+            {% endfor %}
+
+            <tr>
+              <td>{{ recipe.output.item }}</td>
+              <td>{{ recipe.output.qty }}</td>
+              <td>{{ "{:,}".format(recipe.output_value / recipe.output.qty) }} gp</td>
+              <td>{{ "{:,}".format(recipe.output_value | int) }} gp</td>
+              <td class="text-info">Output</td>
+            </tr>
+
+            <tr class="table-secondary">
+              <td colspan="3"><strong>Total Cost</strong></td>
+              <td><strong>{{ "{:,}".format(recipe.total_cost) }} gp</strong></td>
+              <td></td>
+            </tr>
+
+            <tr class = "summary-row">
+              <td colspan="3"><strong>Tax</strong></td>
+              <td><strong>{{ "{:,}".format(recipe.tax) }} gp</strong></td>
+              <td></td>
+            </tr>
+
+            <tr class="{% if recipe.profit > 0 %}table-success{% else %}table-danger{% endif %}">
+              <td colspan="3"><strong>Profit</strong></td>
+              <td><strong>{{ "{:,}".format(recipe.profit) }} gp</strong></td>
+              <td></td>
+            </tr>
+
+          </tbody>
+        </table>
+
+      </div>
+    </div>
+  </div>
+{% endfor %}
+
+</div>
+
+
+</body>
+{% endblock content%}
+
+

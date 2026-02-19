@@ -1,0 +1,15 @@
+.profit_negative {
+    background-color: red;
+}
+.profit_postive {
+    background-color: green;
+}
+
+body {
+    background-color: #28221d;
+}
+
+.summary-row {
+  background-color: #2a2f33;
+  font-weight: 600;
+}
